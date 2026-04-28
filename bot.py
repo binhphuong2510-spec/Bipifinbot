@@ -55,9 +55,10 @@ async def get_analysis(topic=None):
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-haiku-4-5",
+                "model": "claude-haiku-4-5-20251001",
                 "max_tokens": 1000,
                 "system": "Bạn là chuyên gia phân tích tài chính chứng khoán Việt Nam và thị trường cà phê quốc tế.",
+                
                 "messages": [{"role": "user", "content": prompt}],
             },
         )
