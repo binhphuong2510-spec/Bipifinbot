@@ -58,7 +58,6 @@ async def get_analysis(topic=None):
                 "model": "claude-haiku-4-5",
                 "max_tokens": 1000,
                 "system": "Bạn là chuyên gia phân tích tài chính chứng khoán Việt Nam và thị trường cà phê quốc tế.",
-                "tools": [{"type": "web_search_20250305", "name": "web_search"}],
                 "messages": [{"role": "user", "content": prompt}],
             },
         )
