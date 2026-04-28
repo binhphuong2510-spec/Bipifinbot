@@ -4,33 +4,37 @@ from datetime import datetime
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram import Bot
-
+ 
 # ── CẤU HÌNH (đọc từ Environment Variables) ──────────────
-TELEGRAM_TOKEN   = os.environ["TELEGRAM_TOKEN"]    # Token bot Telegram
-TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]  # Chat ID của bạn
-ANTHROPIC_KEY    = os.environ["ANTHROPIC_API_KEY"] # API key Anthropic
-SEND_HOUR        = int(os.environ.get("SEND_HOUR", "8"))  # Giờ gửi (mặc định 8h)
+TELEGRAM_TOKEN   = os.environ.get("TELEGRAM_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+ANTHROPIC_KEY    = os.environ.get("ANTHROPIC_API_KEY", "")
+SEND_HOUR        = int(os.environ.get("SEND_HOUR", "12"))
+ 
+if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID or not ANTHROPIC_KEY:
+    print("❌ Thiếu biến môi trường! Kiểm tra lại TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY")
+    exit(1)
 # ─────────────────────────────────────────────────────────
-
+ 
 PROMPT = """Hôm nay là {date}. Viết BÁO CÁO THỊ TRƯỜNG BUỔI SÁNG ngắn gọn gồm 3 phần:
-
+ 
 📊 CHỨNG KHOÁN VIỆT NAM
 - Dự báo xu hướng VN-Index hôm nay
 - 3 cổ phiếu đáng chú ý (VCB, HPG, FPT, TCB, VIC...)
 - Khuyến nghị: MUA / GIỮ / TRÁNH
-
+ 
 ☕ GIÁ CÀ PHÊ NEW YORK (ICE Futures)
 - Giá Robusta và Arabica hôm nay
 - Xu hướng: TĂNG / GIẢM / ĐI NGANG
 - Tác động đến xuất khẩu Việt Nam
-
+ 
 🌐 VĨ MÔ TOÀN CẦU
 - FED/lãi suất, DXY, rủi ro địa chính trị
-
+ 
 Kết thúc bằng 1 câu NHẬN ĐỊNH TỔNG THỂ.
 Viết tiếng Việt, ngắn gọn, dùng emoji."""
-
-
+ 
+ 
 async def get_analysis() -> str:
     """Gọi Claude API để lấy phân tích thị trường"""
     today = datetime.now().strftime("%A, %d/%m/%Y")
@@ -53,8 +57,8 @@ async def get_analysis() -> str:
         )
         data = resp.json()
         return "\n".join(b["text"] for b in data["content"] if b["type"] == "text")
-
-
+ 
+ 
 async def send_report():
     """Tạo và gửi báo cáo qua Telegram"""
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Đang tạo báo cáo...")
@@ -76,8 +80,8 @@ async def send_report():
             chat_id=TELEGRAM_CHAT_ID,
             text=f"⚠️ FinanceAI bị lỗi: {e}",
         )
-
-
+ 
+ 
 async def main():
     print("🤖 FinanceAI Bot đang chạy...")
     
@@ -87,16 +91,17 @@ async def main():
         chat_id=TELEGRAM_CHAT_ID,
         text=f"✅ FinanceAI Bot đã khởi động!\nSẽ gửi báo cáo lúc {SEND_HOUR}:00 mỗi ngày.",
     )
-
+ 
     # Cài lịch chạy mỗi ngày
     scheduler = AsyncIOScheduler(timezone="Asia/Ho_Chi_Minh")
     scheduler.add_job(send_report, "cron", hour=SEND_HOUR, minute=0)
     scheduler.start()
-
+ 
     # Giữ chương trình chạy
     while True:
         await asyncio.sleep(3600)
-
-
+ 
+ 
 if __name__ == "__main__":
     asyncio.run(main())
+ 
